@@ -19,6 +19,7 @@ class TrafficLightDetector(object):
     '''
     Detects rectangle shaped contour of given specification range
     '''
+
     def __init__(self):
         self.traffic_light = 'Red'
         self.detected = False
@@ -36,7 +37,7 @@ class TrafficLightDetector(object):
         # cv2.imshow('blur', blur)
         # HLS 색공간으로 변환하여 채널을 분리합니다.
         _, L, _ = cv2.split(cv2.cvtColor(blur, cv2.COLOR_BGR2HLS))
-        # cv2.imshow('L', L)  
+        # cv2.imshow('L', L)
         # 임계값을 적용하여 이진화 이미지를 얻습니다.
 
         _, lane = cv2.threshold(
@@ -46,11 +47,9 @@ class TrafficLightDetector(object):
         edges = cv2.Canny(lane, 70, 200)
         cv2.imshow('edges', edges)
 
-
         contours, _ = cv2.findContours(
             edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         # 컨투어를 둘러싸는 가장 작은 직사각형을 찾습니다.
-
 
         for cont in contours:
             # 컨투어를 둘러싸는 가장 작은 직사각형을 찾습니다.
@@ -58,18 +57,16 @@ class TrafficLightDetector(object):
 
             # 조건을 확인하여 너비가 30, 높이가 60에 가까운 직사각형만을 검출합니다.
             # 허용 범위는 +/- 10으로 설정하였습니다.
-            # 23, 57 640ㅍ480 
+            # 23, 57 640ㅍ480
             # 33, 79
             if (10 <= w <= 100) and (0 <= h <= 25):
                 self.detected = True
                 # 해당 조건을 만족하는 직사각형 영역에 초록색 사각형을 그립니다.
                 cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                
 
-        
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        
-        # 색상 범위 정의 
+
+        # 색상 범위 정의
         # rgb 255, 53, 62값을 인식하기 위해 색상 범위를 조정하였습니다.
         # RGB 색상 정의
         red_color = np.uint8([[[255, 53, 62]]])
@@ -88,7 +85,6 @@ class TrafficLightDetector(object):
         yellow_lower = np.array([hsv_yellow_color[0][0][0] - 1, 120, 70])
         yellow_upper = np.array([hsv_yellow_color[0][0][0] + 1, 255, 255])
 
-
         # 색상 범위에 따른 마스크 생성
         red_mask = cv2.inRange(hsv, red_lower, red_upper)
         cv2.imshow('red_mask', red_mask)
@@ -102,8 +98,8 @@ class TrafficLightDetector(object):
         red_detected = cv2.countNonZero(red_mask)
         green_detected = cv2.countNonZero(green_mask)
         yellow_detected = cv2.countNonZero(yellow_mask)
-        
-        # 신호등을 인식한 경우 
+
+        # 신호등을 인식한 경우
         if self.detected:
             if red_detected > green_detected and red_detected > yellow_detected:
                 return 'Red'
@@ -115,7 +111,7 @@ class TrafficLightDetector(object):
                 return 'Unknown'
         else:
             return 'Unknown'
-        
+
     def __call__(self, image):
         self.traffic_light = self.detect_traffic_light(image)
         cv2.imshow('Traffic Light Detection', image)
@@ -138,7 +134,6 @@ class TrafficLightDetectionNode(Node):
         # For simplicity, we'll republish the image with the lane markings
         self.pub_centor_lane = self.create_publisher(
             String, '/traffic_light', 10)
-        
 
     def image_callback(self, img_msg):
         try:

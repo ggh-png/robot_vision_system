@@ -63,7 +63,7 @@ class StopLineDetector(object):
             # 조건을 확인하여 너비가 30, 높이가 60에 가까운 직사각형만을 검출합니다.
             # 허용 범위는 +/- 10으로 설정하였습니다.
             # 23, 57
-            if (20 <= w <= 40) and (20 <= h <= 70):
+            if (20 <= w <= 40) and (30 <= h <= 70):
                 rectangle_count += 1  # 사각형 조건에 부합하면 카운트 증가
                 # 해당 조건을 만족하는 직사각형 영역에 초록색 사각형을 그립니다.
                 cv2.rectangle(bev, (x, y), (x + w, y + h), green, 2)
@@ -94,7 +94,6 @@ class StopLineDetectionNode(Node):
         self.pub_stop_line = self.create_publisher(
             Bool, '/stopline', 10)
 
-
     def image_callback(self, img_msg):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
@@ -107,7 +106,6 @@ class StopLineDetectionNode(Node):
 
         # Publish the detected lane
         self.pub_stop_line.publish(Bool(data=detected))
-    
 
 
 def main(args=None):

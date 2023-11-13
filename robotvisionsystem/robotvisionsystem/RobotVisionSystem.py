@@ -69,7 +69,7 @@ class RobotVisionSystem(Node):
 
         # sensor
         self.create_subscription(
-        Ray, '/car/sensor/ray', self.callback_ray, 10)
+            Ray, '/car/sensor/ray', self.callback_ray, 10)
         self.ray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         # 타이머 콜백 함수
@@ -134,9 +134,9 @@ class RobotVisionSystem(Node):
     def pursuit(self):
         self.Lf = 3.5
         # 차량의 전방 2m 지점을 look ahead point로 설정합니다.
-        self.WB =2.0
+        self.WB = 2.0
         current_angle = self.cte
-    
+
         # 현재 조향각인 current_angle과 목표값(0으로 가정)을 이용하여 알고리즘을 적용합니다.
         # 다음 줄을 알고리즘에 맞게 수정해주세요.
 
@@ -152,7 +152,6 @@ class RobotVisionSystem(Node):
         print('delta : ', delta)
         # radian to degree
 
-
         delta = delta * 180 / math.pi
         if delta > 2.5:
             delta = 2.50
@@ -167,7 +166,7 @@ class RobotVisionSystem(Node):
         return (value - from_min) * (to_max - to_min) / (from_max - from_min) + to_min
 
     def pid(self):
-        self.Kp = 0.3
+        self.Kp = 0.5
         self.Ki = 0.01
         self.Kd = 0.2
 
@@ -180,7 +179,7 @@ class RobotVisionSystem(Node):
             (error + self.previous_error) + \
             self.Kd * (error - self.previous_error)
 
-        # 최대 조향각을 30도로 제한하고 
+        # 최대 조향각을 30도로 제한하고
         # 최소 조향각을 -30도로 제한합니다.
         # 조향각에 반비례하여 속도를 조절합니다.
         if delta > 30.0:
@@ -195,7 +194,8 @@ class RobotVisionSystem(Node):
         self.control_msg.steer = -1 * delta
         self.control_msg.motorspeed = speed
         # self.control_msg.breakbool = False
-        print('steer : ', self.control_msg.steer, 'speed : ', self.control_msg.motorspeed)
+        print('steer : ', self.control_msg.steer,
+              'speed : ', self.control_msg.motorspeed)
         self.pub.publish(self.control_msg)
         # self.control_msg.motorspeed = 0.08
         # self.pub.publish(self.control_msg)
@@ -204,7 +204,7 @@ class RobotVisionSystem(Node):
         yaw_term = self.angle
         target = self.cte
         cte = (target) * 1.9/500.0
-        stanley_k = 0.5 #
+        stanley_k = 0.5
         cte_term = np.arctan2(stanley_k*cte, 30.0)
         self.control_msg.steer = np.degrees(
             0.4 * yaw_term + cte_term) * 5.0 / 3.0 + 2
@@ -255,7 +255,7 @@ class RobotVisionSystem(Node):
                 (error + self.previous_error_curve) + \
                 self.Kd_curve * (error - self.previous_error_curve)
             self.previous_error_curve = error
-            self.control_msg.steer =  0.0
+            self.control_msg.steer = 0.0
             self.control_msg.motorspeed = 0.1
             self.pub.publish(self.control_msg)
             print('steer : ', self.control_msg.steer)
