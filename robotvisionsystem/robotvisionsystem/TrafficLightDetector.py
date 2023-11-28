@@ -2,25 +2,23 @@
 # -*- coding:utf-8 -*-
 
 import cv2
-
-import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from std_msgs.msg import Bool
-from std_msgs.msg import String
-
-from cv_bridge import CvBridge, CvBridgeError
-
+from robotvisionsystem.Logger import Logger
 import numpy as np
 
 
 # colors
-class TrafficLightDetector(object):
+class TrafficLightDetector():
     '''
     Detects rectangle shaped contour of given specification range
     '''
 
-    def __init__(self):
+    def __init__(self, node: Node):
+        if not isinstance(node, Node):
+            raise TypeError("Logger expects an rclpy.node.Node instance.")
+        self.node = node
+        self.logger = Logger(self.node)
+
         self.traffic_light = 'Red'
         self.detected = False
         self.traffic_light_threshold = 85
@@ -108,7 +106,7 @@ class TrafficLightDetector(object):
             elif yellow_detected > red_detected and yellow_detected > green_detected:
                 return 'Yellow'
             else:
-                return 'Unknown'
+                return 'Detected'
         else:
             return 'Unknown'
 
@@ -117,49 +115,3 @@ class TrafficLightDetector(object):
         cv2.imshow('Traffic Light Detection', image)
         cv2.waitKey(1)
         return self.traffic_light
-
-
-class TrafficLightDetectionNode(Node):
-
-    def __init__(self):
-        super().__init__('stop_line_detection_node')
-
-        self.bridge = CvBridge()
-        self.detector = TrafficLightDetector()
-
-        self.sub_image = self.create_subscription(
-            Image, '/car/sensor/camera/front', self.image_callback, 10)
-
-        # You may want to publish the detected lane or some other information
-        # For simplicity, we'll republish the image with the lane markings
-        self.pub_centor_lane = self.create_publisher(
-            String, '/traffic_light', 10)
-
-    def image_callback(self, img_msg):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
-        except CvBridgeError as e:
-            self.get_logger().warn('Failed to convert image: %s' % e)
-            return
-
-        # Use the LaneDetector logic here
-        detected = self.detector(cv_image)  # As an example
-        print(detected)
-
-        # Publish the detected lane
-        self.pub_centor_lane.publish(String(data=detected))
-
-
-def main(args=None):
-    rclpy.init(args=args)
-
-    node = TrafficLightDetectionNode()
-
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()

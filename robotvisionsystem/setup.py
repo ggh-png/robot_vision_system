@@ -23,10 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'RobotVisionSystem = robotvisionsystem.RobotVisionSystem:main',
-            'LaneDetector = robotvisionsystem.LaneDetector:main',
-            'TrafficLightDetector = robotvisionsystem.TrafficLightDetector:main',
-            'StopLineDetector = robotvisionsystem.StopLineDetector:main',
+            'main = robotvisionsystem.main:main',
         ],
     },
 )

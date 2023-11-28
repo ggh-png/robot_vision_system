@@ -11,7 +11,7 @@ def generate_launch_description():
     )
     main_node = Node(
         package="robotvisionsystem",
-        executable="RobotVisionSystem",
+        executable="main",
         output="screen"
     )
     lane_detect_node = Node(
@@ -28,7 +28,7 @@ def generate_launch_description():
     return LaunchDescription([
         ros_tcp_node,
         # main_node,
-        lane_detect_node,
-        stopline_detect_node
+        # lane_detect_node,
+        # stopline_detect_node
 
     ])

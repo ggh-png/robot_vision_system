@@ -1,18 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from std_msgs.msg import Float32
-from robotvisionsystem_msgs.msg import Stanley
-
-from cv_bridge import CvBridge, CvBridgeError
 
 import cv2
 import numpy as np
 from collections import deque
-from .BEV import BEV
+from robotvisionsystem.BEV import BEV
+from robotvisionsystem.Logger import Logger
 
 
 # colors
@@ -26,7 +21,12 @@ class LaneDetector:
     Calculates best fitted lane position and predicted lane position from previous result.
     '''
 
-    def __init__(self):
+    def __init__(self, node: Node):
+        # Ensure that the node argument is indeed an instance of rclpy.node.Node
+        if not isinstance(node, Node):
+            raise TypeError("Logger expects an rclpy.node.Node instance.")
+        self.node = node
+        self.logger = Logger(self.node)
 
         self.bev = BEV()
 
@@ -134,7 +134,7 @@ class LaneDetector:
 
         # 각 클러스터의 평균 위치 계산
         lane_candidates = [np.mean(cluster) for cluster in clusters]
-        
+
         return lane_candidates  # 계산된 평균 위치들 반환
 
     def predict_lane(self):
@@ -151,8 +151,7 @@ class LaneDetector:
         # predicted_lane = predicted_lane + \
         #     (self.angle - np.mean(self.prev_angle))*70
         predicted_lane = self.lane[1] + [-180/max(np.cos(self.angle), 0.75), 0]
-        
-        print(predicted_lane)
+
         return predicted_lane  # 예측된 차선 위치 반환
 
     def update_lane(self, lane_candidates, predicted_lane):
@@ -242,6 +241,7 @@ class LaneDetector:
         angle : radians
         cte : pixels
         '''
+
         canny = self.to_canny(img, show=False)
         bev = self.bev(canny, show=False)
         lines = self.hough(bev, show=False)
@@ -251,50 +251,4 @@ class LaneDetector:
         self.update_lane(lane_candidates, predicted_lane)
         self.mark_lane(bev)
 
-        return self.angle, self.target_lane
-        # return float(self.target_lane)
-
-
-class LaneDetectionNode(Node):
-
-    def __init__(self):
-        super().__init__('lane_detection_node')
-
-        self.bridge = CvBridge()
-        self.detector = LaneDetector()
-
-        self.sub_image = self.create_subscription(
-            Image, '/car/sensor/camera/front', self.image_callback, 10)
-
-        # You may want to publish the detected lane or some other information
-        # For simplicity, we'll republish the image with the lane markings
-        self.pub_centor_lane = self.create_publisher(
-            Stanley, '/centor_lane', 10)
-
-    def image_callback(self, img_msg):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
-        except CvBridgeError as e:
-            self.get_logger().warn('Failed to convert image: %s' % e)
-            return
-
-        # Use the LaneDetector logic here
-        angle, cte = self.detector(cv_image)  # As an example
-
-        msg = Stanley()
-        msg.angle = float(angle)
-        msg.cte = float(cte)
-        # Publish the detected lane
-        self.pub_centor_lane.publish(msg)
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = LaneDetectionNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
+        return self.target_lane

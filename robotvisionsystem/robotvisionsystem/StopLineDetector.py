@@ -2,25 +2,25 @@
 # -*- coding:utf-8 -*-
 
 import cv2
-from .BEV import BEV
-
-import rclpy
+from robotvisionsystem.BEV import BEV
+from robotvisionsystem.Logger import Logger
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from std_msgs.msg import Bool
-from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 
 # colors
 red, green, blue, yellow = (0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)
 
 
-class StopLineDetector(object):
+class StopLineDetector():
     '''
     Detects rectangle shaped contour of given specification range
     '''
 
-    def __init__(self):
+    def __init__(self, node: Node):
+        if not isinstance(node, Node):
+            raise TypeError("Logger expects an rclpy.node.Node instance.")
+
+        self.node = node
 
         # BEV
         self.bev = BEV()
@@ -34,6 +34,7 @@ class StopLineDetector(object):
         '''
         return True if stopline is detected else False
         '''
+
         bev = self.bev(img)
         # 가우시안 블러
         # 5x5 커널을 사용하여 가우시안 블러를 적용합니다.
@@ -76,45 +77,3 @@ class StopLineDetector(object):
         # if detected:
         #     print("detected ", detected)
         return detected
-
-
-class StopLineDetectionNode(Node):
-
-    def __init__(self):
-        super().__init__('stop_line_detection_node')
-
-        self.bridge = CvBridge()
-        self.detector = StopLineDetector()
-
-        self.sub_image = self.create_subscription(
-            Image, '/car/sensor/camera/front', self.image_callback, 10)
-
-        # You may want to publish the detected lane or some other information
-        # For simplicity, we'll republish the image with the lane markings
-        self.pub_stop_line = self.create_publisher(
-            Bool, '/stopline', 10)
-
-    def image_callback(self, img_msg):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
-        except CvBridgeError as e:
-            self.get_logger().warn('Failed to convert image: %s' % e)
-            return
-
-        # Use the LaneDetector logic here
-        detected = self.detector(cv_image)  # As an example
-
-        # Publish the detected lane
-        self.pub_stop_line.publish(Bool(data=detected))
-
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = StopLineDetectionNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
