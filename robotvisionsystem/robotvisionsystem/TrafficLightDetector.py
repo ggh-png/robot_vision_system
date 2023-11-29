@@ -40,10 +40,10 @@ class TrafficLightDetector():
 
         _, lane = cv2.threshold(
             L, self.traffic_light_threshold, 255, cv2.THRESH_BINARY)
-        cv2.imshow('lane', lane)
+        # cv2.imshow('lane', lane)
         # Canny 엣지 검출
         edges = cv2.Canny(lane, 70, 200)
-        cv2.imshow('edges', edges)
+        # cv2.imshow('edges', edges)
 
         contours, _ = cv2.findContours(
             edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -85,12 +85,12 @@ class TrafficLightDetector():
 
         # 색상 범위에 따른 마스크 생성
         red_mask = cv2.inRange(hsv, red_lower, red_upper)
-        cv2.imshow('red_mask', red_mask)
+        # cv2.imshow('red_mask', red_mask)
 
         green_mask = cv2.inRange(hsv, green_lower, green_upper)
-        cv2.imshow('green_mask', green_mask)
+        # cv2.imshow('green_mask', green_mask)
         yellow_mask = cv2.inRange(hsv, yellow_lower, yellow_upper)
-        cv2.imshow('yellow_mask', yellow_mask)
+        # cv2.imshow('yellow_mask', yellow_mask)
 
         # 마스크에 따라 신호등 색상 감지
         red_detected = cv2.countNonZero(red_mask)
@@ -98,17 +98,14 @@ class TrafficLightDetector():
         yellow_detected = cv2.countNonZero(yellow_mask)
 
         # 신호등을 인식한 경우
-        if self.detected:
-            if red_detected > green_detected and red_detected > yellow_detected:
-                return 'Red'
-            elif green_detected > red_detected and green_detected > yellow_detected:
-                return 'Green'
-            elif yellow_detected > red_detected and yellow_detected > green_detected:
-                return 'Yellow'
-            else:
-                return 'Detected'
+        if red_detected > green_detected and red_detected > yellow_detected:
+            return 'Red'
+        elif green_detected > red_detected and green_detected > yellow_detected:
+            return 'Green'
+        elif yellow_detected > red_detected and yellow_detected > green_detected:
+            return 'Yellow'
         else:
-            return 'Unknown'
+            return 'Detected'
 
     def __call__(self, image):
         self.traffic_light = self.detect_traffic_light(image)

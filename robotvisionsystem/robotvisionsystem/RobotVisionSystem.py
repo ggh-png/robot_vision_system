@@ -82,9 +82,19 @@ class RobotVisionSystem():
 
     def stopline_mode(self):
         # 신호등이 인식되지 않으면 pid 모드로 전환
-        if self.sensor.traffic_light == "Unknown":
-            self.logger.error("detect unknown traffic light")
-            self.pid(0.5)
+        if self.sensor.traffic_light != "Detected":
+            if self.sensor.stopline == True:
+                self.poweroff()
+                self.mode = 'traffic_light_mode'
+                self.logger.warn("traffic mode start")
+                return
+            if self.sensor.traffic_light == "Red":
+                self.pid(0.5)
+            elif self.sensor.traffic_light == "Yellow":
+                self.pid(0.6)
+            elif self.sensor.traffic_light == "Green":
+                self.pid(0.7)
+
             return
         else:
             # 횡단 보도를 인식하면 정지 모드로 전환
