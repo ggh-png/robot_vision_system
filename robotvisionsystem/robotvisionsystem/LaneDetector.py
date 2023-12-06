@@ -57,7 +57,7 @@ class LaneDetector:
 
     def hough(self, img, show=False):
         lines = cv2.HoughLinesP(
-            img, 1, np.pi/180, self.hough_threshold, self.min_gap, self.min_length)
+            img, 1, np.pi/183, self.hough_threshold, self.min_gap, self.min_length)
         if show:
             hough_img = np.zeros((img.shape[0], img.shape[1], 3))
             if lines is not None:
@@ -144,13 +144,13 @@ class LaneDetector:
         # 이전 차선의 위치와 각도를 기반으로 중심 외의 차선 위치 예측
         # predicted_lane = self.lane[1] + [-220/max(
         #     np.cos(self.angle), 0.75), 0, 240/max(np.cos(self.angle), 0.75)]
-        predicted_lane = self.lane[1] + [-180/max(
-            np.cos(self.angle), 0.75), 0, 180/max(np.cos(self.angle), 0.75)]
+        predicted_lane = self.lane[1] + [-183/max(
+            np.cos(self.angle), 0.75), 0, 183/max(np.cos(self.angle), 0.75)]
 
         # 예측된 차선 위치에 대한 조정: 이전 각도의 평균과 현재 각도의 차이를 반영
         # predicted_lane = predicted_lane + \
         #     (self.angle - np.mean(self.prev_angle))*70
-        predicted_lane = self.lane[1] + [-180/max(np.cos(self.angle), 0.75), 0]
+        predicted_lane = self.lane[1] + [-183/max(np.cos(self.angle), 0.75), 0]
 
         return predicted_lane  # 예측된 차선 위치 반환
 
@@ -178,7 +178,7 @@ class LaneDetector:
                 # lc를 기준으로 예상되는 다른 차선의 위치를 계산
                 estimated_lane = [
                     lc,
-                    lc + 180/max(np.cos(self.angle), 0.75),
+                    lc + 183/max(np.cos(self.angle), 0.75),
                 ]
 
                 # 가능한 모든 조합을 possibles 리스트에 추가
@@ -190,7 +190,7 @@ class LaneDetector:
             elif idx == 1:
                 # lc를 기준으로 예상되는 다른 차선의 위치를 계산
                 estimated_lane = [
-                    lc - 180/max(np.cos(self.angle), 0.75),
+                    lc - 183/max(np.cos(self.angle), 0.75),
                     lc,
                 ]
 
@@ -228,8 +228,8 @@ class LaneDetector:
         #            3, green, 5, cv2.FILLED)
         cv2.circle(img, (int(l3), self.bev.warp_img_mid),
                    3, blue, 5, cv2.FILLED)
-        cv2.imshow('marked', img)
-        cv2.waitKey(1)
+        # cv2.imshow('marked', img)
+        # cv2.waitKey(1)
         if l1 < 0 or l3 > self.bev.warp_img_w:
             self.target_lane = 250
         else:
@@ -245,7 +245,7 @@ class LaneDetector:
         canny = self.to_canny(img, show=False)
         bev = self.bev(canny, show=False)
         lines = self.hough(bev, show=False)
-        positions = self.filter(lines, show=True)
+        positions = self.filter(lines, show=False)
         lane_candidates = self.get_cluster(positions)
         predicted_lane = self.predict_lane()
         self.update_lane(lane_candidates, predicted_lane)

@@ -9,26 +9,13 @@ def generate_launch_description():
         emulate_tty=True,
         parameters=[{"ROS_IP": "127.0.0.1"}, {"ROS_TCP_PORT": 10000}],
     )
-    main_node = Node(
-        package="robotvisionsystem",
-        executable="main",
-        output="screen"
-    )
-    lane_detect_node = Node(
-        package="robotvisionsystem",
-        executable="LaneDetector",
-        output="screen"
-    )
-    stopline_detect_node = Node(
-        package="robotvisionsystem",
-        executable="StopLineDetector",
-        output="screen"
-    )
+    # main_node = Node(
+    #     package="robotvisionsystem",
+    #     executable="main",
+    #     output="screen"
+    # )
 
     return LaunchDescription([
         ros_tcp_node,
-        # main_node,
-        # lane_detect_node,
-        # stopline_detect_node
-
+        # main_node,s
     ])

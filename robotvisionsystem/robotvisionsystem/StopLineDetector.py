@@ -72,8 +72,8 @@ class StopLineDetector():
         # 4개의 사각형을 검출했을 때만 detected를 True로 설정합니다.
         detected = True if rectangle_count > 4 else False
         # print("rectangle_count : ", rectangle_count)
-        cv2.imshow('stopline', bev)
-        cv2.waitKey(1)
+        # cv2.imshow('stopline', bev)
+        # cv2.waitKey(1)
         # if detected:
         #     print("detected ", detected)
         return detected

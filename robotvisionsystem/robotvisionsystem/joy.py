@@ -22,7 +22,7 @@ class KeyboardController(Node):
                 if event.type == QUIT:
                     running = False
                 if event.type == KEYDOWN:
-                    self.motor_msg.motorspeed = 0.1
+                    self.motor_msg.motorspeed = 0.22
                     self.publisher_.publish(self.motor_msg)
                     self.update(event.key)
                     # self.motor_msg.motorspeed = 0.08
@@ -31,12 +31,12 @@ class KeyboardController(Node):
     def update(self, key):
         if key == K_LEFT:
             self.motor_msg.steer = -2.5
-            self.motor_msg.steer -= 5.0
+            self.motor_msg.steer -= 15.0
             self.motor_msg.motorspeed = 0.0
             self.motor_msg.breakbool = False
         elif key == K_RIGHT:
             self.motor_msg.steer = 2.5
-            self.motor_msg.steer += 5.0
+            self.motor_msg.steer += 15.0
             self.motor_msg.motorspeed = 0.0
             self.motor_msg.breakbool = False
         elif key == K_UP:
@@ -45,13 +45,11 @@ class KeyboardController(Node):
             self.motor_msg.breakbool = False
         elif key == K_DOWN:
             self.motor_msg.motorspeed = 0.0
-            self.motor_msg.motorspeed -= 0.1
+            self.motor_msg.motorspeed -= 0.2
             self.motor_msg.steer = 0.0
         elif key == K_b:
             self.motor_msg.breakbool = not self.motor_msg.breakbool
 
-        self.get_logger().info(
-            f"Publishing: steer: {self.motor_msg.steer}, motorspeed: {self.motor_msg.motorspeed}, breakbool: {self.motor_msg.breakbool}")
 
 def main(args=None):
     rclpy.init(args=args)
@@ -59,6 +57,7 @@ def main(args=None):
     rclpy.spin(keyboard_controller)
     keyboard_controller.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     try:

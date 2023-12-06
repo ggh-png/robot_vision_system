@@ -3,10 +3,8 @@
 
 
 from typing import Any
-import rclpy
 from rclpy.node import Node
 
-from sensor_msgs.msg import Image
 from robotvisionsystem_msgs.msg import Motor
 
 from robotvisionsystem.Logger import Logger
@@ -89,7 +87,7 @@ class RobotVisionSystem():
                 self.logger.warn("traffic mode start")
                 return
             if self.sensor.traffic_light == "Red":
-                self.pid(0.5)
+                self.pid(0.55)
             elif self.sensor.traffic_light == "Yellow":
                 self.pid(0.6)
             elif self.sensor.traffic_light == "Green":
@@ -127,13 +125,16 @@ class RobotVisionSystem():
 
     def curve_mode(self):
         self.curve_cnt += 1
-        if self.curve_cnt == 100:
+        if self.curve_cnt == 50:
             self.curve_cnt = 0
+            # 예측된 차선 초기화
+
             self.mode = 'stopline_mode'
             self.logger.info("stopline mode start")
         else:
             self.control_msg.steer, self.control_msg.motorspeed = self.curve_controller(
                 self.sensor.ray_msg)
+            self.control_msg.steer = 0.0
             self.control_msg.breakbool = False
             self.pub.publish(self.control_msg)
 
@@ -144,5 +145,6 @@ class RobotVisionSystem():
         '''
         # print("start control")
         self.control_dict[self.mode]()  # 수정된 부분
-        self.logger.info("mode: " + self.mode)
+        # self.logger.info("mode: " + self.mode)
         # cv2.waitKey(1)
+        pass

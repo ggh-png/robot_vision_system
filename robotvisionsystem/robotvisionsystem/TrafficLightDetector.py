@@ -109,6 +109,6 @@ class TrafficLightDetector():
 
     def __call__(self, image):
         self.traffic_light = self.detect_traffic_light(image)
-        cv2.imshow('Traffic Light Detection', image)
-        cv2.waitKey(1)
+        # cv2.imshow('Traffic Light Detection', image)
+        # cv2.waitKey(1)
         return self.traffic_light

@@ -15,6 +15,8 @@ from robotvisionsystem.LaneDetector import LaneDetector
 from robotvisionsystem.TrafficLightDetector import TrafficLightDetector
 from robotvisionsystem.StopLineDetector import StopLineDetector
 
+from math import atan2, asin, pi, cos, sin
+
 
 class Sensor:
     def __init__(self, node: Node):
@@ -45,16 +47,56 @@ class Sensor:
 
         # Sensor data
         self.state_msg = None
+        self.rpy_msg = None
         self.camera_msg = None
-        self.ray_msg = None
+        self.ray_msg = [0.0, 0.0, 0.0]
 
         self.centor_lane = None
         self.stopline = None
         self.traffic_light = None
 
+        self.current_velocity = 0.0
+        self.current_angular_velocity = 0.0
+
+        self.last_distance = 0.0
+        self.last_x = 0.0
+        self.last_y = 0.0
+        self.last_theta = 0.0
+
     def state_callback(self, msg):
         # self.node.get_logger().info('Odometry callback triggered')
         self.odom_msg = msg
+        # 현재 좌표와 이전 좌표를 이용하여 현재 속도 계산
+
+        self.current_velocity = ((self.last_x - self.odom_msg.pos_x)
+                                 ** 2 + (self.last_y - self.odom_msg.pos_z)**2)**0.5 / 0.1
+
+        # 좌표 변화량을 이용하여 각속도 계산
+        current_theta = atan2(self.odom_msg.pos_z - self.last_y,
+                              self.odom_msg.pos_x - self.last_x)
+
+        self.current_angular_velocity = (current_theta - self.last_theta) / 0.1
+
+        self.last_x = self.odom_msg.pos_x
+        self.last_y = self.odom_msg.pos_z
+        self.last_theta = current_theta
+
+        pitch = atan2(2.0 * (msg.rot_w * msg.rot_x + msg.rot_y * msg.rot_z),
+                      1.0 - 2.0 * (msg.rot_x * msg.rot_x + msg.rot_y * msg.rot_y))
+        yaw = asin(
+            max(-1.0, min(1.0, 2.0 * (msg.rot_w * msg.rot_y - msg.rot_z * msg.rot_x))))
+        roll = atan2(2.0 * (msg.rot_w * msg.rot_z + msg.rot_x * msg.rot_y),
+                     1.0 - 2.0 * (msg.rot_y * msg.rot_y + msg.rot_z * msg.rot_z))
+        roll = roll * (180.0 / pi)
+        pitch = pitch * (180.0 / pi)
+        yaw = yaw * (180.0 / pi)
+        self.rpy_msg = [roll, pitch, yaw]
+
+        # 차량 yaw값을 이용하여 차량의 속도를 계산
+
+        # self.logger.info(self.rpy_msg)
+        # self.logger.info(self.current_velocity)
+        # self.logger.info(self.current_angular_velocity)
 
     def camera_callback(self, msg):
         # Convert the ROS Image message to OpenCV format
