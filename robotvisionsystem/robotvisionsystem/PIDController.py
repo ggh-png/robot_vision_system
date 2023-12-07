@@ -27,8 +27,8 @@ class PIDController():
         self.Ki = 0.01
         self.Kd = 0.2
 
-        self.max_speed = 5.0
-        self.min_speed = 2.0
+        self.max_speed = 10.0
+        self.min_speed = 3.0
 
         self.previous_error = 0.0
 
@@ -59,9 +59,9 @@ class PIDController():
         # pid speed controller
         delta = self.map_value(delta, -30.0, 30.0, -5.0, 5.0)
 
-        # target_speed = min(
-        #     (self.max_speed - (abs(delta) / 30.0)), self.min_speed)
-        target_speed = 5.0
+        target_speed = min(
+            (self.max_speed - (abs(delta) / 50.0)), self.min_speed)
+        # target_speed = 7.0
         speed = self.pid_speed_controller(target_speed)
 
         return -delta, speed

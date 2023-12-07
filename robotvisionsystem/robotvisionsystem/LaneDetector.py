@@ -228,8 +228,8 @@ class LaneDetector:
         #            3, green, 5, cv2.FILLED)
         cv2.circle(img, (int(l3), self.bev.warp_img_mid),
                    3, blue, 5, cv2.FILLED)
-        # cv2.imshow('marked', img)
-        # cv2.waitKey(1)
+        cv2.imshow('marked', img)
+        cv2.waitKey(1)
         if l1 < 0 or l3 > self.bev.warp_img_w:
             self.target_lane = 250
         else:
@@ -244,7 +244,7 @@ class LaneDetector:
 
         canny = self.to_canny(img, show=False)
         bev = self.bev(canny, show=False)
-        lines = self.hough(bev, show=False)
+        lines = self.hough(bev, show=True)
         positions = self.filter(lines, show=False)
         lane_candidates = self.get_cluster(positions)
         predicted_lane = self.predict_lane()

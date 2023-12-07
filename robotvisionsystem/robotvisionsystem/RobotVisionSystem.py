@@ -9,6 +9,7 @@ from robotvisionsystem_msgs.msg import Motor
 
 from robotvisionsystem.Logger import Logger
 from robotvisionsystem.PIDController import PIDController
+from robotvisionsystem.PIDSpeedController import PIDSpeedController
 from robotvisionsystem.CurveController import CurveController
 from robotvisionsystem.Sensor import Sensor
 
@@ -34,6 +35,7 @@ class RobotVisionSystem():
         # -----------------------
         self.pid_controller = PIDController(self.node)
         self.curve_controller = CurveController(self.node)
+        self.pid_speed_controller = PIDSpeedController(self.node)
 
         self.pub = self.node.create_publisher(Motor, '/car/motor', 10)
         self.control_msg = Motor()
@@ -87,9 +89,9 @@ class RobotVisionSystem():
                 self.logger.warn("traffic mode start")
                 return
             if self.sensor.traffic_light == "Red":
-                self.pid(0.55)
+                self.pid(0.25)
             elif self.sensor.traffic_light == "Yellow":
-                self.pid(0.6)
+                self.pid(0.5)
             elif self.sensor.traffic_light == "Green":
                 self.pid(0.7)
 
@@ -132,8 +134,9 @@ class RobotVisionSystem():
             self.mode = 'stopline_mode'
             self.logger.info("stopline mode start")
         else:
-            self.control_msg.steer, self.control_msg.motorspeed = self.curve_controller(
-                self.sensor.ray_msg)
+            # self.control_msg.steer, self.control_msg.motorspeed = self.curve_controller(
+            #     self.sensor.ray_msg)
+            self.control_msg.motorspeed = self.pid_speed_controller(5.0)
             self.control_msg.steer = 0.0
             self.control_msg.breakbool = False
             self.pub.publish(self.control_msg)
