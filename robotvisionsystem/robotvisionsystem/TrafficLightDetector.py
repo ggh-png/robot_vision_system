@@ -2,8 +2,6 @@
 # -*- coding:utf-8 -*-
 
 import cv2
-from rclpy.node import Node
-from robotvisionsystem.Logger import Logger
 import numpy as np
 
 
@@ -14,10 +12,6 @@ class TrafficLightDetector():
     '''
 
     def __init__(self):
-        # if not isinstance(node, Node):
-        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
-        # self.node = node
-        # self.logger = Logger(self.node)
 
         self.traffic_light = 'Red'
         self.detected = False
@@ -26,7 +20,7 @@ class TrafficLightDetector():
     def detect_traffic_light(self, image):
         # 640x480의 이미지를 320의 480으로 자릅니다
         image = image[:250, 200:440]
-        cv2.imshow('image', image)
+        # cv2.imshow('image', image)
         # 자른 이미지를 가우시안 블러를 이용하여 노이즈를 제거합니다.
         # 248 164, 382 206
         # 5x5 커널을 사용하여 가우시안 블러를 적용합니다.

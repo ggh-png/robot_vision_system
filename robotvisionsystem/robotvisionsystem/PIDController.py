@@ -1,10 +1,6 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import cv2
-from rclpy.node import Node
-from robotvisionsystem.Logger import Logger
-from robotvisionsystem.Sensor import Sensor
 from robotvisionsystem.PIDSpeedController import PIDSpeedController
 import numpy as np
 
@@ -16,21 +12,18 @@ class PIDController():
     '''
 
     def __init__(self):
-        # if not isinstance(node, Node):
-        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
-        # self.node = node
-        # self.logger = Logger(self.node)
-        # self.sensor = Sensor(self.node)
+
         self.pid_speed_controller = PIDSpeedController()
         # pid angle controller
         self.Kp = 0.5
         self.Ki = 0.0
         self.Kd = 0.2
 
-        self.max_speed = 5.0
+        self.max_speed = 7.0
         self.min_speed = 3.0
 
         self.previous_error = 0.0
+        self.target_speed = 0.0
 
     # lane controller
     def map_value(self, value, from_min, from_max, to_min, to_max):
@@ -59,7 +52,11 @@ class PIDController():
         # pid speed controller
         delta = self.map_value(delta, -30.0, 30.0, -5.0, 5.0)
 
-        target_speed = 10.0
-        speed = self.pid_speed_controller(target_speed, current_speed)
+        if current_speed > self.max_speed:
+            self.target_speed = self.max_speed
+        else:
+            self.target_speed += 0.01
+        self.target_speed = 7.0
+        speed = self.pid_speed_controller(self.target_speed, current_speed)
 
         return -delta, speed

@@ -1,14 +1,6 @@
 #! /usr/bin/env python
 # -*- coding:utf-8 -*-
 
-import cv2
-from rclpy.node import Node
-from robotvisionsystem.Logger import Logger
-from robotvisionsystem.Sensor import Sensor
-
-import numpy as np
-
-
 # colors
 class PIDSpeedController():
     '''
@@ -16,16 +8,6 @@ class PIDSpeedController():
     '''
 
     def __init__(self):
-        # if not isinstance(node, Node):
-        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
-        # self.node = node
-        # self.logger = Logger(self.node)
-        # self.sensor = Sensor(self.node)
-
-        # pid speed controller
-        # self.Kp = 0.075  # 3.2
-        # self.Ki = 0.0
-        # self.Kd = 0.0
 
         self.Kp = 0.055  # 3.2
         self.Ki = 0.0
@@ -45,7 +27,7 @@ class PIDSpeedController():
         elif pwm > 0.5:
             pwm = 0.5
 
-        print("speed: {}, rpm: {}".format(
-            pwm, current_speed))
+        # # print("speed: {}, rpm: {}".format(
+        #     pwm, current_speed))
 
         return pwm

@@ -43,7 +43,9 @@ class RobotVisionSystem():
         # 타이머 콜백 함수
         # 주기 10ms
         self.curve_cnt = 0
+        self.curve_mode_cnt = 0
         self.start_cnt = 0
+
         # -----------------------
 
         # flow
@@ -52,16 +54,14 @@ class RobotVisionSystem():
         #
 
         # curve control
-        self.target_min_distance_z = 0.0
-        self.target_max_distance_z = 0.0
-        self.target_max_distance_x = 0.0
-        self.target_min_distance_x = 0.0
-
+        self.target_min_yaw = 0.0
+        self.target_max_yaw = 0.0
+        self.target_delta = 0.0
         self.curve_flag = False
 
         # mode controller
-        # self.mode = 'start_mode'  # 'stopline_mode'
-        self.mode = 'stopline_mode'
+        self.mode = 'start_mode'  # 'stopline_mode'
+        # self.mode = 'stopline_mode'
         self.logger.info("stopline mode start")
 
         self.control_dict = {
@@ -95,7 +95,7 @@ class RobotVisionSystem():
         self.pub.publish(self.control_msg)
 
         self.start_cnt += 1
-        if self.start_cnt > 80:
+        if self.start_cnt > 70:
             self.mode = 'stopline_mode'
             self.start_cnt = 0
             self.logger.info("stopline mode start")
@@ -109,16 +109,24 @@ class RobotVisionSystem():
                 self.logger.warn("traffic mode start")
                 return
             if self.sensor.traffic_light == "Red":
-                self.pid(0.25)
+                self.pid(0.5)
             elif self.sensor.traffic_light == "Yellow":
                 self.pid(0.5)
             elif self.sensor.traffic_light == "Green":
                 self.pid(0.5)
+            if self.curve_mode_cnt == 3:
+                self.pid(0.25)
+            elif self.curve_mode_cnt == 2:
+                self.pid(0.15)
 
             return
         else:
-
-            self.pid(1.0)
+            if self.curve_mode_cnt == 2:
+                self.pid(0.25)
+            elif self.curve_mode_cnt == 3:
+                self.pid(0.15)
+            else:
+                self.pid(1.0)
             return
     # 스탑라인 인식 모드 0: 인식안됨, 1: 인식됨
 
@@ -133,33 +141,47 @@ class RobotVisionSystem():
     def curve_mode(self):
 
         if self.curve_flag == False:
-            self.target_min_distance_z = self.sensor.odom_msg.pos_z - 20.0
-            self.target_max_distance_z = self.sensor.odom_msg.pos_z + 20.0
-            self.target_max_distance_x = self.sensor.odom_msg.pos_x + 20.0
-            self.target_min_distance_x = self.sensor.odom_msg.pos_x - 20.0
+            self.target_min_yaw = self.sensor.yaw - 80
+            self.target_max_yaw = self.sensor.yaw + 80
+            self.curve_mode_cnt += 1
+            self.delta = -10.0
+            if self.curve_mode_cnt == 2:
+                self.target_max_yaw = self.sensor.yaw + 70
+                self.target_min_yaw = self.sensor.yaw - 70
+                self.delta = -10.5
+            elif self.curve_mode_cnt == 3:
+                self.target_max_yaw = self.sensor.yaw + 70
+                self.target_min_yaw = self.sensor.yaw - 70
+                self.delta = -9.5
+            if self.curve_mode_cnt == 4:
+                self.target_max_yaw = self.sensor.yaw + 95
+                self.target_min_yaw = self.sensor.yaw - 95
+                self.delta = -9.5
+
+                self.curve_mode_cnt = 0
 
             self.curve_flag = True
         else:
-            self.control_msg.steer, self.control_msg.motorspeed, error_z, error_x = self.curve_controller(
-                self.target_max_distance_z, self.target_min_distance_z, self.target_max_distance_x, self.target_min_distance_x, self.sensor.odom_msg.pos_z, self.sensor.odom_msg.pos_x, self.sensor.current_velocity)
+            self.control_msg.steer, self.control_msg.motorspeed, error = self.curve_controller(
+                self.target_min_yaw, self.target_max_yaw, self.sensor.yaw, self.sensor.current_velocity, self.delta)
             # self.control_msg.motorspeed = self.pid_speed_controller(3)
             self.control_msg.steer *= -1.0
             self.control_msg.breakbool = False
             self.pub.publish(self.control_msg)
-            self.logger.warn(str(error_z) + "  " + str(error_x))
+            # self.logger.warn(str(error))
 
-            if abs(error_z) < 4.5:
+            if abs(error) < 8.5:
                 self.mode = 'time_mode'
                 self.curve_flag = False
                 self.logger.info("time mode start")
 
     def time_mode(self):
         self.curve_cnt += 1
-        if self.curve_cnt > 50:
+        if self.curve_cnt > 10:
             self.mode = 'stopline_mode'
             self.curve_cnt = 0
             self.logger.info("stopline mode start")
-        self.poweroff()
+        # self.poweroff()
 
     def control(self):
         '''
@@ -167,8 +189,9 @@ class RobotVisionSystem():
         uses method based on current mode
         '''
         # print("start control")
-        # self.control_dict[self.mode]()  # 수정된 부분
-        self.logger.warn("yaw: " + str(self.sensor.yaw))
+        self.control_dict[self.mode]()  # 수정된 부분
+        # self.logger.warn("yaw: " + str(self.sensor.yaw))
+
         # self.logger.info("mode: " + self.mode)
         # cv2.waitKey(1)
         pass

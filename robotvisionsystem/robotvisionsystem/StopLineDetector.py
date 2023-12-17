@@ -3,9 +3,7 @@
 
 import cv2
 from robotvisionsystem.BEV import BEV
-from robotvisionsystem.Logger import Logger
-from rclpy.node import Node
-import numpy as np
+
 
 # colors
 red, green, blue, yellow = (0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255)
@@ -17,10 +15,6 @@ class StopLineDetector():
     '''
 
     def __init__(self):
-        # if not isinstance(node, Node):
-        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
-
-        # self.node = node
 
         # BEV
         self.bev = BEV()
@@ -48,14 +42,18 @@ class StopLineDetector():
         # 임계값을 적용하여 이진화 이미지를 얻습니다.
         _, lane = cv2.threshold(
             L, self.stopline_threshold, 255, cv2.THRESH_BINARY)
-        # cane = cv2.Canny(L, 50, 150)
 
+        # cv2.imshow('L', lane)
+        cane = cv2.Canny(lane, 50, 150)
+
+        # cv2.imshow("cane", cane)
         contours, _ = cv2.findContours(
             lane, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         detected = False
 
         rectangle_count = 0  # 사각형의 개수를 저장하는 변수
+        cross_detected = False  # 직선형태의 신호등 확인 변수
 
         for cont in contours:
             # 컨투어를 둘러싸는 가장 작은 직사각형을 찾습니다.
@@ -64,16 +62,21 @@ class StopLineDetector():
             # 조건을 확인하여 너비가 30, 높이가 60에 가까운 직사각형만을 검출합니다.
             # 허용 범위는 +/- 10으로 설정하였습니다.
             # 23, 57
-            if (20 <= w <= 40) and (30 <= h <= 70):
+            if (20 <= w <= 40) and (50 <= h <= 70):
                 rectangle_count += 1  # 사각형 조건에 부합하면 카운트 증가
                 # 해당 조건을 만족하는 직사각형 영역에 초록색 사각형을 그립니다.
                 cv2.rectangle(bev, (x, y), (x + w, y + h), green, 2)
 
-        # 4개의 사각형을 검출했을 때만 detected를 True로 설정합니다.
-        detected = True if rectangle_count > 4 else False
+            if (w > 200):
+                cross_detected = True  # 조건 부합하면 True
+                # 해당 조건을 만족하는 직사각형 영역에 초록색 사각형을 그립니다.
+                cv2.rectangle(bev, (x, y), (x + w, y + h), green, 2)
+
+        # 4개의 사각형을 검출했을 때 또는 긴 직선을 확인했을떄만 detected를 True로 설정합니다.
+        detected = True if rectangle_count > 4 or cross_detected else False
         # print("rectangle_count : ", rectangle_count)
-        # cv2.imshow('stopline', bev)
-        # cv2.waitKey(1)
+        cv2.imshow('stopline', bev)
+        cv2.waitKey(1)
         # if detected:
         #     print("detected ", detected)
         return detected
