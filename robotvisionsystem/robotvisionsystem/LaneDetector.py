@@ -21,12 +21,12 @@ class LaneDetector:
     Calculates best fitted lane position and predicted lane position from previous result.
     '''
 
-    def __init__(self, node: Node):
+    def __init__(self):
         # Ensure that the node argument is indeed an instance of rclpy.node.Node
-        if not isinstance(node, Node):
-            raise TypeError("Logger expects an rclpy.node.Node instance.")
-        self.node = node
-        self.logger = Logger(self.node)
+        # if not isinstance(node, Node):
+        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
+        # self.node = node
+        # self.logger = Logger(self.node)
 
         self.bev = BEV()
 
@@ -244,7 +244,7 @@ class LaneDetector:
 
         canny = self.to_canny(img, show=False)
         bev = self.bev(canny, show=False)
-        lines = self.hough(bev, show=True)
+        lines = self.hough(bev, show=False)
         positions = self.filter(lines, show=False)
         lane_candidates = self.get_cluster(positions)
         predicted_lane = self.predict_lane()

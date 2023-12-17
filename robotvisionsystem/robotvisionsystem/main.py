@@ -11,6 +11,7 @@ class Core(Node):
     def __init__(self):
         super().__init__('robot_vistion_system_node')
         self.logger = Logger(self)
+        self.sensor = Sensor(self)
         self.timer = self.create_timer(0.1, self.control)
         self.robot_vision_system = RobotVisionSystem(self)
         self.logger.info("robot_vistion_system_node start")

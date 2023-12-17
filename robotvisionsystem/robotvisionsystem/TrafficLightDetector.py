@@ -13,11 +13,11 @@ class TrafficLightDetector():
     Detects rectangle shaped contour of given specification range
     '''
 
-    def __init__(self, node: Node):
-        if not isinstance(node, Node):
-            raise TypeError("Logger expects an rclpy.node.Node instance.")
-        self.node = node
-        self.logger = Logger(self.node)
+    def __init__(self):
+        # if not isinstance(node, Node):
+        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
+        # self.node = node
+        # self.logger = Logger(self.node)
 
         self.traffic_light = 'Red'
         self.detected = False
@@ -109,6 +109,6 @@ class TrafficLightDetector():
 
     def __call__(self, image):
         self.traffic_light = self.detect_traffic_light(image)
-        cv2.imshow('Traffic Light Detection', image)
-        cv2.waitKey(1)
+        # cv2.imshow('Traffic Light Detection', image)
+        # cv2.waitKey(1)
         return self.traffic_light

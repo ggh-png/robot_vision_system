@@ -29,11 +29,11 @@ class Sensor:
 
         # detector
         # 차선 중심점
-        self.lane_detector = LaneDetector(self.node)
+        self.lane_detector = LaneDetector()
         # stop line
-        self.stopline_detector = StopLineDetector(self.node)
+        self.stopline_detector = StopLineDetector()
         # traffic light
-        self.traffic_light_detector = TrafficLightDetector(self.node)
+        self.traffic_light_detector = TrafficLightDetector()
 
         # Odometry
         self.sub_state = self.node.create_subscription(

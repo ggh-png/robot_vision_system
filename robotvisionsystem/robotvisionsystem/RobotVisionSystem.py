@@ -33,17 +33,12 @@ class RobotVisionSystem():
 
         # controller
         # -----------------------
-        self.pid_controller = PIDController(self.node)
-        self.curve_controller = CurveController(self.node)
-        self.pid_speed_controller = PIDSpeedController(self.node)
+        self.pid_controller = PIDController()
+        self.curve_controller = CurveController()
+        self.pid_speed_controller = PIDSpeedController()
 
         self.pub = self.node.create_publisher(Motor, '/car/motor', 10)
         self.control_msg = Motor()
-
-        # detector
-        # 차선 중심점
-
-        self.ray = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         # 타이머 콜백 함수
         # 주기 10ms
@@ -81,7 +76,7 @@ class RobotVisionSystem():
     # pid cocntol mode
     def pid(self, slow):
         self.control_msg.steer, self.control_msg.motorspeed = self.pid_controller(
-            self.sensor.centor_lane)
+            self.sensor.centor_lane, self.sensor.current_velocity)
         self.control_msg.motorspeed *= slow
         self.control_msg.breakbool = False
         self.pub.publish(self.control_msg)
@@ -105,12 +100,12 @@ class RobotVisionSystem():
 
             return
         else:
-            # 횡단 보도를 인식하면 정지 모드로 전환
-            if self.sensor.stopline == True:
-                self.poweroff()
-                self.mode = 'traffic_light_mode'
-                self.logger.warn("traffic mode start")
-                return
+            # # 횡단 보도를 인식하면 정지 모드로 전환
+            # if self.sensor.stopline == True:
+            #     self.poweroff()
+            #     self.mode = 'traffic_light_mode'
+            #     self.logger.warn("traffic mode start")
+            #     return
             self.pid(1.0)
             return
     # 스탑라인 인식 모드 0: 인식안됨, 1: 인식됨
@@ -123,16 +118,6 @@ class RobotVisionSystem():
             self.mode = 'curve_mode'
             self.logger.error("curve mode start")
 
-
-# [56.528008   7.110108   3.8785684  3.2687771  3.6757927  6.0503397
-#  24.24845    5.716587   3.1184006  2.6281233  2.9553661  4.8645186]
-
-    # ray의 0번쨰 값은 전방 1번째 값은 30 도 2번째 값은 60도 3번째 값은 90도
-    # 1 ~ 6 좌측 7 ~ 12 우측
-    # 오차값 중첩
-    # 커브 모드 1초간 커브 주행 후 스탑라인 인식 모드로 전환
-
-
     def curve_mode(self):
 
         if self.curve_flag == False:
@@ -144,16 +129,16 @@ class RobotVisionSystem():
             self.curve_flag = True
         else:
             self.control_msg.steer, self.control_msg.motorspeed, error_z, error_x = self.curve_controller(
-                self.target_max_distance_z, self.target_min_distance_z, self.target_max_distance_x, self.target_min_distance_x)
-
+                self.target_max_distance_z, self.target_min_distance_z, self.target_max_distance_x, self.target_min_distance_x, self.sensor.odom_msg.pos_z, self.sensor.odom_msg.pos_x, self.sensor.current_velocity)
             # self.control_msg.motorspeed = self.pid_speed_controller(3)
             self.control_msg.steer *= -1.0
             self.control_msg.breakbool = False
             self.pub.publish(self.control_msg)
             self.logger.warn(str(error_z) + "  " + str(error_x))
 
-            if abs(error_z) < 5.0:
+            if abs(error_z) < 8.5:
                 self.mode = 'stopline_mode'
+                self.curve_flag = False
                 self.logger.info("stopline mode start")
 
     def control(self):

@@ -15,13 +15,13 @@ class PIDController():
     Detects rectangle shaped contour of given specification range
     '''
 
-    def __init__(self, node: Node):
-        if not isinstance(node, Node):
-            raise TypeError("Logger expects an rclpy.node.Node instance.")
-        self.node = node
-        self.logger = Logger(self.node)
-        self.sensor = Sensor(self.node)
-        self.pid_speed_controller = PIDSpeedController(self.node)
+    def __init__(self):
+        # if not isinstance(node, Node):
+        #     raise TypeError("Logger expects an rclpy.node.Node instance.")
+        # self.node = node
+        # self.logger = Logger(self.node)
+        # self.sensor = Sensor(self.node)
+        self.pid_speed_controller = PIDSpeedController()
         # pid angle controller
         self.Kp = 0.5
         self.Ki = 0.01
@@ -36,7 +36,7 @@ class PIDController():
     def map_value(self, value, from_min, from_max, to_min, to_max):
         return (value - from_min) * (to_max - to_min) / (from_max - from_min) + to_min
 
-    def __call__(self, cte):
+    def __call__(self, cte, current_speed):
         target_angle = 250
         # Let's say `target_lane` is the current angle reading
         current_angle = cte
@@ -62,6 +62,8 @@ class PIDController():
         # target_speed = min(
         #     (self.max_speed - (abs(delta) / 50.0)), self.min_speed)
         target_speed = 5.0
-        speed = self.pid_speed_controller(target_speed)
+        speed = self.pid_speed_controller(target_speed, current_speed)
+        # self.logger.info("target_speed: {}, speed: {}, delta: {}".format(
+        #     target_speed, speed, delta))
 
         return -delta, speed
