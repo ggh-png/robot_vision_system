@@ -4,6 +4,8 @@
 import cv2
 from rclpy.node import Node
 from robotvisionsystem.Logger import Logger
+from robotvisionsystem.Sensor import Sensor
+from robotvisionsystem.PIDSpeedController import PIDSpeedController
 import numpy as np
 
 
@@ -18,29 +20,45 @@ class CurveController():
             raise TypeError("Logger expects an rclpy.node.Node instance.")
         self.node = node
         self.logger = Logger(self.node)
-        # pid controller
-        self.Kp = 0.5
-        self.Ki = 0.0
-        self.Kd = 0.0
+        self.sensor = Sensor(self.node)
+        self.pid_speed_controller = PIDSpeedController(self.node)
 
-        self.previous_error = 0.0
+        self.min_speed = 4.0
+        self.max_speed = 2.0
+
+        # pid controller
+        self.Kp_z = 0.55
+        self.Ki_z = 0.0
+        self.Kd_z = 0.0
+
+        self.Kp_x = 0.2
+        self.Ki_x = 0.0
+        self.Kd_x = 0.0
+
+        self.previous_error_z = 0.0
+        self.previous_error_x = 0.0
     # lane controller
 
     def map_value(self, value, from_min, from_max, to_min, to_max):
         return (value - from_min) * (to_max - to_min) / (from_max - from_min) + to_min
 
-    def __call__(self, ray):
-        for i in range(12):
-            if ray[i] > 20.0:
-                ray[i] = 20.0
+    def __call__(self, target_min_z, target_max_z, target_min_x, target_max_x):
+        # Let's say `target_lane` is the current angle reading
+        # 현재 위치에서 y축으로 20만큼
+        max_error_z = target_max_z - self.sensor.odom_msg.pos_z
+        min_error_z = target_min_z - self.sensor.odom_msg.pos_z
+        # 현재 위치에서 x축으로 20만큼
+        max_error_x = target_max_x - self.sensor.odom_msg.pos_x
+        min_error_x = target_min_x - self.sensor.odom_msg.pos_x
 
-        error = ray[1] + ray[2] + ray[3] - \
-            ray[9] - ray[10] - ray[11]
-        delta = self.Kp * error + self.Ki * \
-            (error + self.previous_error) + \
-            self.Kd * (error - self.previous_error)
+        error_z = min(max_error_z, min_error_z)
+        error_x = min(max_error_x, min_error_x)
 
-        self.previous_error = error
+        delta = self.Kp_z * error_z + self.Ki_z * \
+            (error_z + self.previous_error_z) + \
+            self.Kd_z * (error_z - self.previous_error_z)
+
+        self.previous_error_z = error_z
         # 최대 조향각을 30도로 제한하고
         # 최소 조향각을 -30도로 제한합니다.
         # 조향각에 반비례하여 속도를 조절합니다.
@@ -48,8 +66,17 @@ class CurveController():
             delta = 30.0
         elif delta < -30.0:
             delta = -30.0
-        delta = self.map_value(delta, -30.0, 30.0, -5.0, 5.0)
 
-        speed = min((0.12 - (abs(delta) / 90.0)), 0.1)
-        return -delta, speed
-        # self.set_mode('stopline_mode')
+        speed = self.Kp_x * error_x + self.Ki_x * \
+            (error_x + self.previous_error_x) + \
+            self.Kd_x * (error_x - self.previous_error_x)
+        self.previous_error_x = error_x
+        if speed > 5.0:
+            speed = 5.0
+        elif speed < 2.0:
+            speed = 2.0
+
+        speed = self.pid_speed_controller(abs(speed))
+        print("speed: ", speed)
+
+        return -delta, speed, error_z, error_x

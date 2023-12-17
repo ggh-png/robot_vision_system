@@ -55,6 +55,14 @@ class RobotVisionSystem():
         # 감속 및 정지선 인식
         #
 
+        # curve control
+        self.target_min_distance_z = 0.0
+        self.target_max_distance_z = 0.0
+        self.target_max_distance_x = 0.0
+        self.target_min_distance_x = 0.0
+
+        self.curve_flag = False
+
         # mode controller
         self.mode = 'stopline_mode'  # 'stopline_mode'
         self.logger.info("stopline mode start")
@@ -126,20 +134,27 @@ class RobotVisionSystem():
 
 
     def curve_mode(self):
-        self.curve_cnt += 1
-        if self.curve_cnt == 50:
-            self.curve_cnt = 0
-            # 예측된 차선 초기화
 
-            self.mode = 'stopline_mode'
-            self.logger.info("stopline mode start")
+        if self.curve_flag == False:
+            self.target_min_distance_z = self.sensor.odom_msg.pos_z - 20.0
+            self.target_max_distance_z = self.sensor.odom_msg.pos_z + 20.0
+            self.target_max_distance_x = self.sensor.odom_msg.pos_x + 20.0
+            self.target_min_distance_x = self.sensor.odom_msg.pos_x - 20.0
+
+            self.curve_flag = True
         else:
-            # self.control_msg.steer, self.control_msg.motorspeed = self.curve_controller(
-            #     self.sensor.ray_msg)
-            self.control_msg.motorspeed = self.pid_speed_controller(5.0)
-            self.control_msg.steer = 0.0
+            self.control_msg.steer, self.control_msg.motorspeed, error_z, error_x = self.curve_controller(
+                self.target_max_distance_z, self.target_min_distance_z, self.target_max_distance_x, self.target_min_distance_x)
+
+            # self.control_msg.motorspeed = self.pid_speed_controller(3)
+            self.control_msg.steer *= -1.0
             self.control_msg.breakbool = False
             self.pub.publish(self.control_msg)
+            self.logger.warn(str(error_z) + "  " + str(error_x))
+
+            if abs(error_z) < 5.0:
+                self.mode = 'stopline_mode'
+                self.logger.info("stopline mode start")
 
     def control(self):
         '''

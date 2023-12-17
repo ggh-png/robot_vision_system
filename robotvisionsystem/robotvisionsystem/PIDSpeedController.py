@@ -44,7 +44,7 @@ class PIDSpeedController():
             pwm = 0.05
         elif pwm > 0.5:
             pwm = 0.5
-        self.logger.info("speed: {}, rpm: {}".format(
-            pwm, self.sensor.current_velocity))
+        # self.logger.info("speed: {}, rpm: {}".format(
+        #     pwm, self.sensor.current_velocity))
 
         return pwm
