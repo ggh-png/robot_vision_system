@@ -43,6 +43,7 @@ class RobotVisionSystem():
         # 타이머 콜백 함수
         # 주기 10ms
         self.curve_cnt = 0
+        self.start_cnt = 0
         # -----------------------
 
         # flow
@@ -59,13 +60,16 @@ class RobotVisionSystem():
         self.curve_flag = False
 
         # mode controller
-        self.mode = 'stopline_mode'  # 'stopline_mode'
+        # self.mode = 'start_mode'  # 'stopline_mode'
+        self.mode = 'stopline_mode'
         self.logger.info("stopline mode start")
 
         self.control_dict = {
+            'start_mode': self.start_mode,
             'traffic_light_mode': self.traffic_light_mode,  # 신호등 인식 모드
             'stopline_mode': self.stopline_mode,  # 정지선 인식 모드
             'curve_mode': self.curve_mode,  # 커브 모드
+            'time_mode': self.time_mode,  # 시간 모드
         }
 
     def poweroff(self):
@@ -83,6 +87,19 @@ class RobotVisionSystem():
 
     # 신호등 인식 모드 0: 빨강, 노랑, 1: 초록
 
+    def start_mode(self):
+        self.control_msg.motorspeed = self.pid_speed_controller(
+            3, self.sensor.current_velocity)
+        self.control_msg.steer = 0.0
+        self.control_msg.breakbool = False
+        self.pub.publish(self.control_msg)
+
+        self.start_cnt += 1
+        if self.start_cnt > 80:
+            self.mode = 'stopline_mode'
+            self.start_cnt = 0
+            self.logger.info("stopline mode start")
+
     def stopline_mode(self):
         # 신호등이 인식되지 않으면 pid 모드로 전환
         if self.sensor.traffic_light != "Detected":
@@ -96,16 +113,11 @@ class RobotVisionSystem():
             elif self.sensor.traffic_light == "Yellow":
                 self.pid(0.5)
             elif self.sensor.traffic_light == "Green":
-                self.pid(0.7)
+                self.pid(0.5)
 
             return
         else:
-            # # 횡단 보도를 인식하면 정지 모드로 전환
-            # if self.sensor.stopline == True:
-            #     self.poweroff()
-            #     self.mode = 'traffic_light_mode'
-            #     self.logger.warn("traffic mode start")
-            #     return
+
             self.pid(1.0)
             return
     # 스탑라인 인식 모드 0: 인식안됨, 1: 인식됨
@@ -136,10 +148,18 @@ class RobotVisionSystem():
             self.pub.publish(self.control_msg)
             self.logger.warn(str(error_z) + "  " + str(error_x))
 
-            if abs(error_z) < 8.5:
-                self.mode = 'stopline_mode'
+            if abs(error_z) < 4.5:
+                self.mode = 'time_mode'
                 self.curve_flag = False
-                self.logger.info("stopline mode start")
+                self.logger.info("time mode start")
+
+    def time_mode(self):
+        self.curve_cnt += 1
+        if self.curve_cnt > 50:
+            self.mode = 'stopline_mode'
+            self.curve_cnt = 0
+            self.logger.info("stopline mode start")
+        self.poweroff()
 
     def control(self):
         '''
@@ -147,7 +167,8 @@ class RobotVisionSystem():
         uses method based on current mode
         '''
         # print("start control")
-        self.control_dict[self.mode]()  # 수정된 부분
+        # self.control_dict[self.mode]()  # 수정된 부분
+        self.logger.warn("yaw: " + str(self.sensor.yaw))
         # self.logger.info("mode: " + self.mode)
         # cv2.waitKey(1)
         pass

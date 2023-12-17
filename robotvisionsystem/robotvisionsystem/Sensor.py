@@ -62,6 +62,7 @@ class Sensor:
         self.last_x = 0.0
         self.last_y = 0.0
         self.last_theta = 0.0
+        self.yaw = 0.0
 
     def state_callback(self, msg):
         # self.node.get_logger().info('Odometry callback triggered')
@@ -89,7 +90,7 @@ class Sensor:
                      1.0 - 2.0 * (msg.rot_y * msg.rot_y + msg.rot_z * msg.rot_z))
         roll = roll * (180.0 / pi)
         pitch = pitch * (180.0 / pi)
-        yaw = yaw * (180.0 / pi)
+        self.yaw = yaw * (180.0 / pi)
         self.rpy_msg = [roll, pitch, yaw]
 
         # 차량 yaw값을 이용하여 차량의 속도를 계산

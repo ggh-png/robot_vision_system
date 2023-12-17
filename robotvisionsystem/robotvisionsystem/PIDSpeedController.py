@@ -28,8 +28,8 @@ class PIDSpeedController():
         # self.Kd = 0.0
 
         self.Kp = 0.055  # 3.2
-        self.Ki = 0.03
-        self.Kd = 0.04
+        self.Ki = 0.0
+        self.Kd = 0.02
 
         self.previous_error = 0.0
 
@@ -44,7 +44,8 @@ class PIDSpeedController():
             pwm = 0.05
         elif pwm > 0.5:
             pwm = 0.5
-        # self.logger.info("speed: {}, rpm: {}".format(
-        #     pwm, self.sensor.current_velocity))
+
+        print("speed: {}, rpm: {}".format(
+            pwm, current_speed))
 
         return pwm

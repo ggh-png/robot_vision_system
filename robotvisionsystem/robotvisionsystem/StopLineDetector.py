@@ -26,7 +26,7 @@ class StopLineDetector():
         self.bev = BEV()
 
         # stopline detection param
-        self.stopline_threshold = 125
+        self.stopline_threshold = 160
         self.area_threshold = 2000  # 2000
         self.lengh_threshold = 300
 

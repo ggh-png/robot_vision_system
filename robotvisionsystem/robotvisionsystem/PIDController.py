@@ -24,7 +24,7 @@ class PIDController():
         self.pid_speed_controller = PIDSpeedController()
         # pid angle controller
         self.Kp = 0.5
-        self.Ki = 0.01
+        self.Ki = 0.0
         self.Kd = 0.2
 
         self.max_speed = 5.0
@@ -59,11 +59,7 @@ class PIDController():
         # pid speed controller
         delta = self.map_value(delta, -30.0, 30.0, -5.0, 5.0)
 
-        # target_speed = min(
-        #     (self.max_speed - (abs(delta) / 50.0)), self.min_speed)
-        target_speed = 5.0
+        target_speed = 10.0
         speed = self.pid_speed_controller(target_speed, current_speed)
-        # self.logger.info("target_speed: {}, speed: {}, delta: {}".format(
-        #     target_speed, speed, delta))
 
         return -delta, speed

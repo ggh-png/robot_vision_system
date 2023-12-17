@@ -27,7 +27,7 @@ class CurveController():
         self.max_speed = 2.0
 
         # pid controller
-        self.Kp_z = 0.75
+        self.Kp_z = 0.6
         self.Ki_z = 0.0
         self.Kd_z = 0.0
 
@@ -76,7 +76,7 @@ class CurveController():
         elif speed < 2.0:
             speed = 2.0
 
-        speed = self.pid_speed_controller(abs(speed), current_speed)
+        speed = self.pid_speed_controller(3, current_speed)
         # print("speed: ", speed)
-
+        delta = -10.0
         return -delta, speed, error_z, error_x
